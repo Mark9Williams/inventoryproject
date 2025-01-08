@@ -7,7 +7,8 @@
                 </div>
                 <div class="card-body">
                     <form method="POST">
-                        
+                        {% csrf_token %}
+                        {{ form }}
                         <input class="btn btn-info btn-block" type="submit" value="Make Request">
                     </form>
                 </div>
@@ -25,31 +26,20 @@
                                 <th scope="col">Product</th>
                                 <th scope="col">Category</th>
                                 <th scope="col">Quantity</th>
+                                <th scope="col">Quantity</th>
                             </tr>
                         </thead>
                         <tbody>
-                            
+                            {% for order in orders %}
+                            {% if order.staff == user %}
                             <tr>
-                                <td>Book</td>
-                                <td>Stationary</td>
-                                <td>10</td>
+                                <td>{{ order.product.name }}</td>
+                                <td>{{ order.product.category }}</td>
+                                <td>{{ order.order_quantity }}</td>
+                                <td>{{ order.date }}</td>
                             </tr>
-							<tr>
-                                <td>Book</td>
-                                <td>Stationary</td>
-                                <td>10</td>
-                            </tr>
-							<tr>
-                                <td>Book</td>
-                                <td>Stationary</td>
-                                <td>10</td>
-                            </tr>
-							<tr>
-                                <td>Book</td>
-                                <td>Stationary</td>
-                                <td>10</td>
-                            </tr>
-                            
+                            {% endif %}
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
