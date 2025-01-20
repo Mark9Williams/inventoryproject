@@ -30,20 +30,22 @@
                 <table class="table bg-white">
                     <thead class="bg-info">
                         <tr class="text-white">
-                            <th scope="col">#</th>
-                            <th scope="col">Name</th>
+                            <!-- <th scope="col">#</th> -->
+                            <th scope="col">Drug name</th>
                             <th scope="col">Category</th>
                             <th scope="col">Quantity</th>
+                            <th scope="col">Expiry date</th>
                             <th scope="col">Activity</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in items %}
                         <tr>
-                            <th scope="row">1</th>
+                            <!-- <th scope="row">1</th> -->
                             <td>{{ item.name }}</td>
                             <td>{{ item.category }}</td>
                             <td>{{ item.quantity }}</td>
+                            <td>{{ item.expiry_date }}</td>
                             <td>
                                 <a class="btn btn-info btn-sm" href="{% url 'dashboard-product-update' item.id %}">Edit</a>
                                 <a class="btn btn-danger btn-sm" href="{% url 'dashboard-product-delete' item.id %}">Delete</a>

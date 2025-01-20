@@ -118,4 +118,3 @@ def order(request):
         'product_count': product_count
     }
     return render(request, 'dashboard/order.html', context)
-
