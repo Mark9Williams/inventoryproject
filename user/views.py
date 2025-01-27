@@ -1,48 +1,60 @@
-from django.shortcuts import render, redirect 
-from django.contrib.auth.forms import UserCreationForm
-from .forms import CreateUserForm, UserUpdateForm, ProfileUpdateForm
-from django.contrib.auth import logout
-from django.contrib import messages
+from rest_framework import viewsets, permissions, status
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from .models import Patient, Prescription
+from .serializers import CustomTokenObtainPairSerializer, PatientSerializer, PrescriptionSerializer
 
-# Create your views here.
-def register(request):
-    if request.method == 'POST':
-        form = CreateUserForm(request.POST)
-        if form.is_valid():
-            form.save()
-            username = form.cleaned_data.get('username')
-            messages.success(request, f'Account has been created for {username}. Continue to login')
-        return redirect("user-login")
-    else:
-        form = CreateUserForm()
-    context = {
-        'form': form,
-    }
-    return render(request, 'user/register.html', context)
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
-def logout_view(request):
-    # if request.method == 'POST':
-    #     logout(request)
-    #     return redirect('user-login') 
-    return redirect('user-login')
+class PatientViewSet(viewsets.ModelViewSet):
+    queryset = Patient.objects.all()
+    serializer_class = PatientSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-def profile(request):
-    return render(request, 'user/profile.html')
+    def perform_create(self, serializer):
+        if serializer.is_valid():
+            serializer.save(created_by=self.request.user)
+        else:
+            print(serializer.errors)  # Log errors for debugging
+            raise ValidationError(serializer.errors)
 
-def profile_update(request):
-    if request.method == 'POST':
-        user_form = UserUpdateForm(request.POST, instance=request.user)
-        profile_form = ProfileUpdateForm(
-            request.POST, request.FILES, instance=request.user.profile)
-        if user_form.is_valid() and profile_form.is_valid():
-            user_form.save()
-            profile_form.save()
-            return redirect('user-profile')
-    else:
-        user_form = UserUpdateForm(instance=request.user)
-        profile_form = ProfileUpdateForm(instance=request.user.profile)  
-    context = {
-        'user_form': user_form,
-        'profile_form': profile_form,
-    }
-    return render(request, 'user/profile_update.html', context)
+    @action(detail=False, methods=["get"], url_path="fetch-patients", url_name="fetch_patients")
+    def fetch_patients(self, request):
+        """
+        Custom endpoint to fetch registered patients.
+        """
+        patients = self.queryset  # Retrieve all patients
+        serializer = self.get_serializer(patients, many=True)  # Serialize the data
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class PrescriptionViewSet(viewsets.ModelViewSet):
+    queryset = Prescription.objects.all()
+    serializer_class = PrescriptionSerializer
+
+    def get_queryset(self):
+        # Check if the request is for a specific patient's prescriptions
+        patient_id = self.kwargs.get('patient_pk')  # Get the nested patient ID
+        if patient_id:
+            return Prescription.objects.filter(patient_id=patient_id)
+        return super().get_queryset()
+
+    # Custom action to get prescriptions by patient ID
+    @action(detail=True, methods=['get'])
+    def patient_prescriptions(self, request, pk=None):
+        patient = self.get_object()
+        prescriptions = patient.prescriptions.all()
+        serializer = PrescriptionSerializer(prescriptions, many=True)
+        return Response(serializer.data)
+
+    # Optionally add a method to create a prescription
+    @action(detail=True, methods=['post'])
+    def add_prescription(self, request, pk=None):
+        patient = self.get_object()
+        data = request.data
+        serializer = PrescriptionSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(patient=patient)  # Assign the patient to the prescription
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)

@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-2u-^rluq_bh0554l5++920&+)o$*64wvu0fmrmlc&i!wg^-m*1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -77,9 +77,13 @@ TEMPLATES = [
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
 }
 
 WSGI_APPLICATION = 'inventoryproject.wsgi.application'
@@ -168,5 +172,26 @@ CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672/'
 CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://localhost:5173",
+    # "http://localhost:3000",
 ]
+
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+]
+
+CORS_ALLOW_HEADERS = [
+    "content-type",
+    "Authorization",
+    "x-csrftoken",
+    "accept",
+    "origin",
+]
+
+CORS_ALLOW_ALL_ORIGINS = True 
